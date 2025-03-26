@@ -929,14 +929,6 @@ class Resource(models.ResourceInstance):
             if related_resources:
                 for resource in related_resources["docs"]:
                     if resource["found"]:
-                        if include_rr_count:
-                            rel_count = get_relations(
-                                resourceinstanceid=resource["_id"],
-                                start=0,
-                                limit=0,
-                                count_only=True,
-                            )
-                            resource["_source"]["total_relations"] = rel_count
                         for descriptor_type in ("displaydescription", "displayname"):
                             descriptor = get_localized_descriptor(
                                 resource, descriptor_type

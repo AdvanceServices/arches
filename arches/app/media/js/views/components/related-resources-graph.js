@@ -147,7 +147,12 @@ define([
                 data.id = data.resourcexid;
             } else {
                 data.id = data.resourceinstanceid;
-                data.totalRelations = data.total_relations.value;
+                if (data.total_relations?.value){
+                    data.totalRelations = data.total_relations.value
+                }
+                else{
+                    data.totalRelations = undefined;
+                }
             }
             var classes = [];
             if (data.graph_id) classes.push(resourceTypeLookup[data.graph_id].className);
