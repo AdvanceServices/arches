@@ -175,6 +175,13 @@ define([
                 self.viewModel.loading(true);
             });
 
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                    // If the page was restored from cache, hide the loading mask
+                    self.viewModel.loading(false);
+                }
+        });
+
             Backbone.View.apply(this, arguments);
             return this;
         },
