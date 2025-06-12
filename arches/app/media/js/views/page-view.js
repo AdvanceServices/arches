@@ -180,7 +180,7 @@ define([
                     // If the page was restored from cache, hide the loading mask
                     self.viewModel.loading(false);
                 }
-        });
+           });
 
             Backbone.View.apply(this, arguments);
             return this;
