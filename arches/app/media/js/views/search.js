@@ -108,6 +108,6 @@ define([
             this.viewModel.sharedStateObject.menuActive = this.viewModel.menuActive;
         },
     });
-
+    
     return new SearchView();
 });
