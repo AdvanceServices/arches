@@ -890,9 +890,9 @@ class JsonLdReader(Reader):
                     try:
                         self.printline("Found multiple matches!", indent)
                         # if this doesn't throw an error then keep the possible branch "p"
-                        for k, v in vi.items():
+                        for k1, v in vi.items():
                             matched_branch = self.find_matching_branch(
-                                k, v, p[0], {}, tile, indent + 1
+                                k1, v, p[0], {}, tile, indent + 1
                             )
                         possible2.append(p)
                     except Exception as e:
@@ -915,7 +915,7 @@ class JsonLdReader(Reader):
 
     def data_walk(self, data_node, tree_node, result, tile=None, indent=0):
         my_tiles = []
-
+        
         # pre-seed as much of the cache as we can during the data-walk
         if "@id" in data_node and "@type" in data_node:
             dataType = (
