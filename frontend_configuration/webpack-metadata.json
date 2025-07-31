@@ -1,0 +1,11 @@
+{
+    "_comment": "This is a generated file. Do not edit directly.",
+    "APP_RELATIVE_PATH": "arches/app",
+    "APP_ROOT": "/home/margarita/arches_/arches/arches/app",
+    "ARCHES_APPLICATIONS": [],
+    "ARCHES_APPLICATIONS_PATHS": {},
+    "SITE_PACKAGES_DIRECTORY": "/home/margarita/arches_/myenv/lib/python3.12/site-packages",
+    "ROOT_DIR": "/home/margarita/arches_/arches/arches",
+    "STATIC_URL": "/home/michael/PycharmProjects/static/",
+    "WEBPACK_DEVELOPMENT_SERVER_PORT": 9000
+}

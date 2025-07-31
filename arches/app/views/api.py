@@ -610,6 +610,7 @@ class Resources(APIBase):
         return JSONResponse(out, indent=indent)
 
     def put(self, request, resourceid, slug=None, graphid=None):
+        print('IN THE PUT METHOD')
         allowed_formats = ["arches-json", "json-ld"]
         indent = request.GET.get("indent", None)
         format = request.GET.get("format", "json-ld")
@@ -635,6 +636,7 @@ class Resources(APIBase):
             with transaction.atomic():
                 try:
                     if format == "json-ld":
+                        print("format is json-ld")
                         data = JSONDeserializer().deserialize(request.body)
                         reader = JsonLdReader()
                         if slug is not None:
@@ -661,6 +663,7 @@ class Resources(APIBase):
                                         resource_instance.delete()
                                     except models.ResourceInstance.DoesNotExist:
                                         pass
+                                    print('REQUEST')
                                     resource.save(request=request)
                                 response.append(
                                     JSONDeserializer().deserialize(

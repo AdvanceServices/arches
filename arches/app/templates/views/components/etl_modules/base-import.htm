@@ -15,10 +15,12 @@
         <span data-bind="text: $root.translations.loadingData"></span>
     </h4>
     <div>
+
         <span class="etl-loading-metadata-key" data-bind="text: $root.translations.loadingStatus + ':'"></span>
         <span class="etl-loading-metadata-value" data-bind="
             text:
                 selectedLoadEvent().status == 'indexed' ? $root.translations.completed
+                : selectedLoadEvent().status == 'indexed-semi' ? $root.translations.semicompleted
                 : selectedLoadEvent().status == 'completed' ? $root.translations.indexing
                 : selectedLoadEvent().status == 'validated' ? $root.translations.running
                 : selectedLoadEvent().status == 'running' ? $root.translations.validating
@@ -164,8 +166,34 @@
                 </td>
             </tr>
         </tbody>
-        <!-- /ko -->            
-    </table>
+        <!-- /ko -->     
+    </table>   
+    <!-- ko if: showFullErrorReport -->
+    <div class="etl-full-error-report">
+        <h4 class="summary-header">
+            <span data-bind="text: $root.translations.fullErrorReport"></span>
+        </h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>{% trans "Resource ID" %}</th>
+                    <th>{% trans "Error Message" %}</th>
+                    <th>{% trans "Group Node" %}</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: fullErrorReport">
+                <tr>
+                    <td data-bind="text: resourceid"></td>
+                    <td data-bind="text: error_message"></td>
+                    <td data-bind="text: name"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+<!-- /ko -->
+    
+    
+    
 </div>
 <!-- /ko -->
 {% endblock etl_error_report %}

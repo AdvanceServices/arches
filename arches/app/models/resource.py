@@ -250,10 +250,11 @@ class Resource(models.ResourceInstance):
         # This initializes serialized graph (for use in superclass?). Setup for the above. NOt sure
         if not self.get_serialized_graph():
             pass
-
+        print('in save of Resource')
         request = kwargs.pop("request", None)
         user = kwargs.pop("user", None)
         index = kwargs.pop("index", True)
+        print(index)
         context = kwargs.pop("context", None)
         transaction_id = kwargs.pop("transaction_id", None)
 

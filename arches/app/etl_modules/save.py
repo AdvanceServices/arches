@@ -75,11 +75,37 @@ def _save_to_tiles(cursor, loadid):
                 """SELECT g.name graph, COUNT(DISTINCT l.resourceid)
                     FROM load_staging l, resource_instances r, graphs g
                     WHERE l.loadid = %s
+                    AND l.resourceid IN (
+						      SELECT resourceid
+						      FROM load_staging
+						      WHERE loadid = %s
+						      GROUP BY resourceid
+						      HAVING COUNT(*) = COUNT(*) FILTER (WHERE passes_validation = true)
+						  	 )
                     AND r.resourceinstanceid = l.resourceid
                     AND g.graphid = r.graphid
                     GROUP BY g.name
                 """,
-                [loadid],
+                [loadid,loadid],
+            )
+            resources = cursor.fetchall()
+            log_event_details(cursor, loadid, "done|Getting the statistics...")
+            cursor.execute(
+                """SELECT g.name graph, COUNT(DISTINCT l.resourceid)
+                    FROM load_staging l, resource_instances r, graphs g
+                    WHERE l.loadid = %s
+                    AND l.resourceid IN (
+						      SELECT resourceid
+						      FROM load_staging
+						      WHERE loadid = %s
+						      GROUP BY resourceid
+						      HAVING COUNT(*) = COUNT(*) FILTER (WHERE passes_validation = true)
+						  	 )
+                    AND r.resourceinstanceid = l.resourceid
+                    AND g.graphid = r.graphid
+                    GROUP BY g.name
+                """,
+                [loadid,loadid],
             )
             resources = cursor.fetchall()
             number_of_resources = {}
@@ -90,11 +116,18 @@ def _save_to_tiles(cursor, loadid):
                 """SELECT g.name graph, n.name, COUNT(*)
                     FROM load_staging l, nodes n, graphs g
                     WHERE l.loadid = %s
+                    AND l.resourceid IN (
+						      SELECT resourceid
+						      FROM load_staging
+						      WHERE loadid = %s
+						      GROUP BY resourceid
+						      HAVING COUNT(*) = COUNT(*) FILTER (WHERE passes_validation = true)
+						  	 )
                     AND n.nodeid = l.nodegroupid
                     AND n.graphid = g.graphid
                     GROUP BY n.name, g.name;
                 """,
-                [loadid],
+                [loadid,loadid],
             )
             tiles = cursor.fetchall()
             for tile in tiles:
@@ -111,10 +144,27 @@ def _save_to_tiles(cursor, loadid):
                     ]
                 }
             )
+            # check if there are any errors so the load can marked as semi-completed
             cursor.execute(
-                """UPDATE load_event SET (status, load_end_time, load_details) = (%s, %s, load_details || %s::JSONB) WHERE loadid = %s""",
-                ("completed", datetime.now(), number_of_import, loadid),
+                """SELECT COUNT(DISTINCT l.resourceid)
+                    FROM load_staging l
+                    WHERE l.loadid = %s
+                    AND passes_validation = false
+                """,
+                [loadid],
             )
+            numof_failed_resources = cursor.fetchone()[0]
+            print('numof_failed_resources', numof_failed_resources)
+            if numof_failed_resources > 0:
+                cursor.execute(
+                    """UPDATE load_event SET (status, load_end_time, load_details) = (%s, %s, load_details || %s::JSONB) WHERE loadid = %s""",
+                    ("semi-completed", datetime.now(), number_of_import, loadid),
+                )
+            else:
+                cursor.execute(
+                    """UPDATE load_event SET (status, load_end_time, load_details) = (%s, %s, load_details || %s::JSONB) WHERE loadid = %s""",
+                    ("completed", datetime.now(), number_of_import, loadid),
+                )
     except (IntegrityError, ProgrammingError) as e:
         logger.error(e)
         cursor.execute(
@@ -127,6 +177,7 @@ def _save_to_tiles(cursor, loadid):
             "title": _("Failed to complete load"),
             "message": _("Unable to insert record into staging table"),
         }
+
 
 
 def _post_save_edit_log(cursor, userid, loadid, multiprocessing=False):
@@ -163,9 +214,23 @@ def _post_save_edit_log(cursor, userid, loadid, multiprocessing=False):
             ),
         )
         log_event_details(cursor, loadid, "done")
+        cursor.execute("SELECT status FROM load_event WHERE loadid = %s", (loadid,))
+        row = cursor.fetchone()
+
+        if row:
+            current_status = row[0]
+
+            if current_status == "completed":
+                new_status = "indexed"
+            elif current_status == "semi-completed":
+                new_status = "indexed-semi"
+            else:
+                # Handle other cases or skip
+                new_status = "indexed"  # or skip the update entirely
+
         cursor.execute(
             """UPDATE load_event SET (status, indexed_time, complete, successful) = (%s, %s, %s, %s) WHERE loadid = %s""",
-            ("indexed", datetime.now(), True, True, loadid),
+            (new_status, datetime.now(), True, True, loadid),
         )
         return {"success": True, "data": "indexed"}
     except Exception as e:
